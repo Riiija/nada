@@ -1,0 +1,76 @@
+sNomfichierCA est une chaîne
+sbuf est un Buffer
+sbuf=fChargeBuffer(sNomfichierCA)
+
+si SAI_Objet_courArr=""  ou SAI_Date_courArr="" ou SAI_Nom_Direction=""  ou SAI_NumDos="" ou   COMBO_suivie..ValeurAffichée="" ou COMBO_Position..ValeurAffichée=""  ou COMBO_Personnel..ValeurAffichée=""  alors
+	Info("Merci de renseigner la case vide")
+	retour
+sinon
+	HLitRecherchePremier(Courrier_arrive,NumEnrArr,SAI_NumEnr)
+	si HTrouve(Courrier_arrive) alors
+		Info ("Ce numéro est déjà attribué à un courrier arrivé, veuillez saisir un autre")
+		retour
+	sinon
+		Courrier_arrive.NumEnrArr=SAI_NumEnr
+		Courrier_arrive.Objet_courArr=SAI_Objet_courArr
+		Courrier_arrive.NomPrenom=COMBO_Personnel..ValeurAffichée
+		Courrier_arrive.Nom_Direction=SAI_Nom_Direction
+		Courrier_arrive.Date_courArr=SAI_Date_courArr
+		Courrier_arrive.FonctionOccupe=SAI_FonctionOccupe
+		Courrier_arrive.NomPieceCA=SAI_NomFichierCourARR
+		Courrier_arrive.Source_courArr=COMBO_Provenance..ValeurAffichée
+		Courrier_arrive.Traite=COMBO_Traite..ValeurAffichée
+		Courrier_arrive.Libelle_Type=COMBO_Type_courrier..ValeurAffichée
+		Courrier_arrive.Suivie_Cour=COMBO_suivie..ValeurAffichée
+		Courrier_arrive.Position_actuelle=COMBO_Position..ValeurAffichée
+		Courrier_arrive.Num_Dos=SAI_NumDos
+		Courrier_arrive.date_traite=DateSys()
+		Courrier_arrive.heure_traite=HeureSys()
+		//HAttacheMémo(Courrier_arrive,NumEnr,SAI_NumEnr,hMémoImg)
+		si HAjoute(Courrier_arrive)=Vrai alors
+			ToastAffiche("Courrier enregistré avec succès",toastCourt,cvMilieu,chCentre,VertPastel)
+			NotifierNouveauCourrier(Courrier_arrive.NomPrenom,Courrier_arrive.Objet_courArr,Courrier_arrive.NomPieceCA)
+			Historique_Operation.Num_Hist			= SAI_NumEnr
+//			Historique_Operation.NomPrenom_Hist		= COMBO_Personnel..ValeurAffichée
+			Historique_Operation.Date_Hist			= SAI_Date_courArr
+			Historique_Operation.NomPiece_Hist		= SAI_NomFichierCourARR
+			Historique_Operation.Objet_Hist			= SAI_Objet_courArr
+			Historique_Operation.NomDirect_Hist		= SAI_Nom_Direction
+			Historique_Operation.Destinataire_Hist	= COMBO_Personnel..ValeurAffichée
+			Historique_Operation.DateTraite_Hist	= DateSys()
+			Historique_Operation.HeureTraite_Hist	= HeureSys()
+			Historique_Operation.Positio_Hist		= COMBO_Position..ValeurAffichée
+			Historique_Operation.Suivie_Hist		= COMBO_suivie..ValeurAffichée
+			Historique_Operation.NumDos_Hist		= SAI_NumDos
+			Historique_Operation.LOGIN				= SAI_RecupLOGIN_HIST
+			Historique_Operation.OperEffect			= "Ajout du courrier arrivé"
+			HAjoute(Historique_Operation)
+			ToastAffiche(TABLE_Courrier_Historique)
+			TableAffiche(TABLE_Courrier_Historique)
+		TableAffiche(TABLE_Courrier_arrive)
+		RAZ()
+		DonneFocus(SAI_Date_courArr)
+//		HLitDernier(Courrier_arrive)
+//		SI HTrouve(Courrier_arrive) ALORS
+//		SAI_NumEnr=1+Val(Courrier_arrive.NumEnrArr+1)+"/"+AnnéeEnCours
+//		EcranVersFichier()
+//		SINON
+//		SAI_NumEnr=1+"/"+AnnéeEnCours
+//		FIN
+		//SAI_NumEnr..Etat=AffichageSeulement
+
+
+		fin
+		fin
+	fin
+HLitDernier(Courrier_arrive)
+si HTrouve(Courrier_arrive) alors
+	//SAI_NumEnr=Val(Courrier_arrive.NumEnrArr+1)+1+"-"+"MFBSB/CAB"+"/"+Milieu(AnnéeEnCours,3,4)
+	SAI_NumEnr=Val(Courrier_arrive.NumEnrArr+1)+1+"/"+Milieu(AnnéeEnCours,3,4)
+	//EcranVersFichier()
+sinon
+	SAI_NumEnr=1+"/"+Milieu(AnnéeEnCours,3,4)
+fin
+//SAI_NumEnrDep..Etat=AffichageSeulement
+//SI HAjoute(courrier_arrive) ALORS
+

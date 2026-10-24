@@ -1,0 +1,94 @@
+sFic est une chaîne=fExtraitChemin(TABLE_Courrier_depart.COL_NomPiece,fFichier+fExtension)
+	si HLitRecherche(Piece_Jointe,NomPiece,TABLE_Courrier_depart.COL_NomPiece) alors
+		HLitRecherche(Courrier_depart,NomPiece,TABLE_Courrier_depart.COL_NomPiece)
+		si Courrier_depart.NomPiece="" alors
+			Info("Aucun fichier attaché à ce courrier arrivé")
+			retour
+		sinon
+		HExtraitMémo(Piece_Jointe,LienPiece,fRepEnCours+"\"+sFic)
+		Historique_Operation.Num_Hist			= TABLE_Courrier_depart.COL_NumEnrDepart
+		Historique_Operation.NomPrenom_Hist		= TABLE_Courrier_depart.COL_NomPrenom
+		Historique_Operation.Date_Hist			= TABLE_Courrier_depart.COL_Dat_courDep
+		Historique_Operation.NomPiece_Hist		= TABLE_Courrier_depart.COL_NomPiece
+		Historique_Operation.Objet_Hist			= TABLE_Courrier_depart.COL_Objet_courDep
+		Historique_Operation.NomDirect_Hist		= TABLE_Courrier_depart.COL_Nom_Direction
+		Historique_Operation.Destinataire_Hist	= TABLE_Courrier_depart.COL_Destination_courDep
+		Historique_Operation.DateTraite_Hist	= DateSys()
+		Historique_Operation.HeureTraite_Hist	= HeureSys()
+		Historique_Operation.LOGIN				= SAI_RecupLOGIN_HIST
+		Historique_Operation.OperEffect			= "Consultation de ce courrier départ"
+		HAjoute(Historique_Operation)
+		ToastAffiche(TABLE_Courrier_Historique)
+		TableAffiche(TABLE_Courrier_Historique)
+		fin
+fin
+
+//LanceAppliAssociée(fRepEnCours+"\"+sFic)
+sCheminPDF	est une chaîne	= fRepEnCours + "\" + sFic
+sLecteurPDF	est une chaîne	= ""
+
+// Vérifie que le PDF existe
+si pas fFichierExiste(sCheminPDF) alors
+	Erreur("Le fichier PDF n'existe pas :" + RC + sCheminPDF)
+	retour
+fin
+
+
+// =====================================================
+// 1. RECHERCHE DANS C:\Program Files
+// =====================================================
+
+// Adobe Acrobat Reader
+si fFichierExiste("C:\Program Files\Adobe\Acrobat DC\Acrobat\AcroRd32.exe") alors
+	sLecteurPDF = "C:\Program Files\Adobe\Acrobat DC\Acrobat\AcroRd32.exe"
+fin
+
+// Adobe Acrobat Reader nouvelle installation
+si sLecteurPDF = "" et fFichierExiste("C:\Program Files\Adobe\Acrobat DC\Acrobat\AcroRd32.exe") alors
+	sLecteurPDF ="C:\Program Files\Adobe\Acrobat DC\Acrobat\AcroRd32.exe"
+fin
+
+// Adobe Acrobat
+si sLecteurPDF = "" et fFichierExiste("C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe") alors
+	sLecteurPDF = "C:\Program Files\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+fin
+
+
+// =====================================================
+// 2. RECHERCHE DANS C:\Program Files (x86)
+// =====================================================
+
+si sLecteurPDF = "" et fFichierExiste("C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\AcroRd32.exe") alors
+	sLecteurPDF = "C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\AcroRd32.exe"
+fin
+
+si sLecteurPDF = "" et fFichierExiste("C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\AcroRd32.exe") alors
+	sLecteurPDF = "C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\AcroRd32.exe"
+fin
+
+si sLecteurPDF = "" et fFichierExiste("C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\Acrobat.exe") alors
+	sLecteurPDF = "C:\Program Files (x86)\Adobe\Acrobat DC\Acrobat\Acrobat.exe"
+fin
+
+
+// =====================================================
+// 3. OUVERTURE DIRECTE DU PDF
+// =====================================================
+
+si sLecteurPDF <> "" alors
+
+	LanceAppli(
+	"""" + sLecteurPDF + """ """ + sCheminPDF + """",
+	exeActif,
+	exeNonBloquant
+	)
+
+sinon
+
+	Erreur(
+	"Aucun lecteur Adobe Acrobat/Reader n'a été trouvé dans :" + RC +
+	"C:\Programmes" + RC +
+	"C:\Program Files (x86)"
+	)
+
+fin

@@ -1,0 +1,64 @@
+
+si SAI_Objet_courDep=""  ou SAI_Date_courDep=""  ou COMBO_Personnel1..ValeurAffichée=""  alors
+	Info("Merci de renseigner la ou les case(s) vide(s)")
+	retour
+sinon
+	HLitRecherchePremier(Courrier_depart,NumEnrDepart,SAI_NumEnrDep)
+	si HTrouve(Courrier_depart) alors
+		Info ("Ce numéro est déjà attribué à un courrier départ, veuillez en saisir un autre")
+		retour
+	sinon
+		//EcranVersFichier()
+		Courrier_depart.NumEnrDepart=SAI_NumEnrDep
+		Courrier_depart.NomPrenom=COMBO_Personnel1..ValeurAffichée
+		Courrier_depart.Dat_courDep=SAI_Date_courDep
+		Courrier_depart.FonctionOccupe=SAI_FonctionOccupe1
+		Courrier_depart.NomPiece=SAI_NomFichierCourDep
+		Courrier_depart.Objet_courDep=SAI_Objet_courDep
+		Courrier_depart.Nom_Direction=SAI_Direction
+		Courrier_depart.Destination_courDep=COMBO_destinataire..ValeurAffichée
+		//************************************************
+
+		//Courrier_arrive.Libelle_Type=SAI_Libelle_Type
+		//			HAttacheMémo(Courrier_arrive,NumEnr,SAI_NumEnr,hMémoImg)
+		si HAjoute(Courrier_depart)=Vrai alors
+
+			ToastAffiche("Courrier enregistré avec succès",toastCourt,cvMilieu,chCentre,VertPastel)
+			NotifierNouveauCourrier(Courrier_depart.NomPrenom,Courrier_depart.Objet_courDep,Courrier_depart.NomPiece)
+//			sinon
+//			Erreur("Erreur d'enregistrement :" + RC + HErreurInfo())
+//			fin
+			Historique_Operation.Num_Hist			= SAI_NumEnrDep
+			Historique_Operation.NomPrenom_Hist		= COMBO_Personnel1..ValeurAffichée
+			Historique_Operation.Date_Hist			= SAI_Date_courDep
+			Historique_Operation.NomPiece_Hist		= SAI_NomFichierCourDep
+			Historique_Operation.Objet_Hist			= SAI_Objet_courDep
+			Historique_Operation.NomDirect_Hist		= SAI_Direction
+			Historique_Operation.Destinataire_Hist	= COMBO_destinataire..ValeurAffichée
+			Historique_Operation.DateTraite_Hist	= DateSys()
+			Historique_Operation.HeureTraite_Hist	= HeureSys()
+			Historique_Operation.LOGIN				= SAI_RecupLOGIN_HIST
+			Historique_Operation.OperEffect			="Ajout du courrier départ"
+			HAjoute(Historique_Operation)
+
+			ToastAffiche(TABLE_Courrier_Historique)
+			TableAffiche(TABLE_Courrier_Historique)
+			RAZ()
+			TableAffiche(TABLE_Courrier_depart)
+			DonneFocus(SAI_Date_courDep)
+
+		fin
+		fin
+    fin
+HLitDernier(Courrier_depart)
+si HTrouve(Courrier_depart) alors
+	SAI_NumEnrDep=1+Val(Courrier_depart.NumEnrDepart+1)+"/"+Milieu(AnnéeEnCours,3,4)
+	//EcranVersFichier()
+sinon
+	//SAI_NumEnrDep=1+"-"+"MFBSB/CAB"+"/"+Milieu(AnnéeEnCours,3,4)
+	SAI_NumEnrDep=1+"/"+Milieu(AnnéeEnCours,3,4)
+fin
+		//SAI_NumEnrDep..Etat=AffichageSeulement
+
+
+

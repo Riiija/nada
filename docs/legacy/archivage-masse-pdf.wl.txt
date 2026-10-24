@@ -1,0 +1,242 @@
+
+sListeFichiers			est une chaîne
+sNomFichier				est une chaîne
+sNomSansExtension		est une chaîne
+
+i						est un entier
+
+nNbSelectionnes			est un entier	= 0
+nNbAjoutes				est un entier	= 0
+nNbDoublons				est un entier	= 0
+nNbErreurs				est un entier	= 0
+
+
+// ============================================================
+// SÉLECTION DES FICHIERS PDF
+// ============================================================
+
+sListeFichiers = fSélecteur(
+"",
+"",
+"Sélectionnez les fichiers PDF",
+"Fichiers PDF (*.pdf)" + TAB + "*.pdf",
+"",
+fselMulti)
+
+si sListeFichiers = "" alors
+	retour
+fin
+
+
+// ============================================================
+// NOMBRE DE FICHIERS SÉLECTIONNÉS
+// ============================================================
+
+nNbSelectionnes = ChaîneOccurrence(sListeFichiers, RC) + 1
+
+
+// ============================================================
+// PARCOURS DES FICHIERS
+// ============================================================
+
+pour i = 1 à nNbSelectionnes
+
+	// ----------------------------------------------------------
+	// Récupération du chemin du fichier
+	// ----------------------------------------------------------
+
+	sNomFichier = ExtraitChaîne(sListeFichiers, i, RC)
+
+	si sNomFichier = "" alors
+		continuer
+	fin
+
+
+	// ----------------------------------------------------------
+	// Vérification de l'existence du fichier
+	// ----------------------------------------------------------
+
+	si pas fFichierExiste(sNomFichier) alors
+
+		nNbErreurs++
+
+		Info(
+		"Le fichier n'existe plus :" + RC + RC +
+		sNomFichier)
+
+		continuer
+
+	fin
+
+
+	// ----------------------------------------------------------
+	// Récupération du nom sans extension
+	// ----------------------------------------------------------
+
+	sNomSansExtension = fExtraitChemin(
+	sNomFichier,
+	fFichier)
+
+
+	// ==========================================================
+	// VÉRIFICATION DU DOUBLON
+	// ==========================================================
+
+	HLitRecherchePremier(
+	Piece_Jointe,
+	NomPiece,
+	sNomSansExtension)
+
+
+	si HTrouve(Piece_Jointe) alors
+
+		nNbDoublons++
+
+		Info(
+		"Le fichier existe déjà dans la base :" + RC + RC +
+		sNomSansExtension + RC + RC +
+		"Il sera ignoré.")
+
+		continuer
+
+	fin
+
+
+	// ==========================================================
+	// PRÉPARATION DE L'ENREGISTREMENT
+	// ==========================================================
+
+	HRAZ(Piece_Jointe)
+
+	Piece_Jointe.NomPiece = sNomSansExtension
+
+
+	// ==========================================================
+	// DATE D'ARCHIVAGE
+	// ==========================================================
+
+	si SAI_Dat_archiveCD = "" alors
+
+		Piece_Jointe.Dat_archive = DateHeureSys()
+
+	sinon
+
+		Piece_Jointe.Dat_archive = SAI_Dat_archiveCD
+
+	fin
+
+
+	// ==========================================================
+	// ATTACHEMENT DIRECT DU PDF AU MÉMO BINAIRE
+	//
+	// IMPORTANT :
+	// On ne fait plus :
+	//
+	// sBufferPDF = fChargeBuffer(...)
+	// Piece_JointeCourrierArrive.LienPieceCA = sBufferPDF
+	//
+	// Le fichier est directement associé à la rubrique mémo.
+	// ==========================================================
+
+	quand exception dans
+
+		// ------------------------------------------------------
+		// Association du fichier PDF à la rubrique mémo binaire
+		// ------------------------------------------------------
+
+		si pas HAttacheMémo(
+			Piece_Jointe,
+			LienPiece,
+			sNomFichier) alors
+
+			nNbErreurs++
+
+			Info(
+			"Impossible d'attacher le fichier PDF :" + RC + RC +
+			sNomSansExtension + RC + RC +
+			"Le fichier sera ignoré.")
+
+			continuer
+
+		fin
+
+
+		// ------------------------------------------------------
+		// Ajout dans HFSQL
+		// ------------------------------------------------------
+
+		si pas HAjoute(Piece_Jointe) alors
+
+			nNbErreurs++
+
+			Info(
+			"Impossible d'enregistrer le fichier PDF :" + RC + RC +
+			sNomSansExtension + RC + RC +
+			HErreurInfo() + RC + RC +
+			"Le fichier sera ignoré.")
+
+			// On passe au fichier suivant
+			continuer
+//			TableAjouteLigne(TABLE_Piece_JointeSupprime, ...
+//			Piece_Jointe.NomPiece, ...
+//			DateHeureSys(), ...
+//			Piece_Jointe.IDPiece_Jointe)
+		fin
+
+
+	faire
+
+		// ======================================================
+		// ERREUR D'EXÉCUTION
+		// ======================================================
+
+		nNbErreurs++
+
+		Info(
+		"Le fichier PDF n'a pas pu être enregistré :" + RC + RC +
+		sNomSansExtension + RC + RC +
+		"L'opération a été interrompue pour ce fichier." + RC +
+		"Le traitement continue avec le fichier suivant.")
+
+		continuer
+
+	fin
+
+
+	// ==========================================================
+	// AJOUT RÉUSSI
+	// ==========================================================
+
+	nNbAjoutes++
+
+	ToastAffiche(
+	sNomSansExtension + " ajouté avec succès",
+	toastCourt,
+	cvMilieu,
+	chCentre,
+	VertPastel)
+
+fin
+
+
+// ============================================================
+// ACTUALISATION DU TABLEAU
+// ============================================================
+
+TableAffiche(TABLE_Piece_Jointe)
+// ==========================================================
+// AJOUT DANS LE TABLEAU DE SURVEILLANCE
+// ==========================================================
+
+
+
+// ============================================================
+// MESSAGE FINAL
+// ============================================================
+
+Info(
+"Traitement des fichiers PDF terminé." + RC + RC +
+"Fichiers sélectionnés : " + nNbSelectionnes + RC +
+"Fichiers ajoutés : " + nNbAjoutes + RC +
+"Doublons ignorés : " + nNbDoublons + RC +
+"Erreurs : " + nNbErreurs)
